@@ -59,7 +59,7 @@ var testCases = []struct {
 	},
 }
 
-// TestACL runs tests on SetACL and MyRights commands (for now).
+// TestACL runs tests on SetACL, GetACL and MyRights commands.
 func TestACL(t *testing.T) {
 	client, server := newClientServerPair(t, imap.ConnStateAuthenticated)
 
