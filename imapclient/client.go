@@ -46,6 +46,10 @@ const (
 	literalWriteTimeout = 5 * time.Minute
 )
 
+var dialer = &net.Dialer{
+	Timeout: 30 * time.Second,
+}
+
 // SelectedMailbox contains metadata for the currently selected mailbox.
 type SelectedMailbox struct {
 	Name           string
@@ -205,6 +209,15 @@ func NewStartTLS(conn net.Conn, options *Options) (*Client, error) {
 	return client, nil
 }
 
+// DialInsecure connects to an IMAP server without any encryption at all.
+func DialInsecure(address string, options *Options) (*Client, error) {
+	conn, err := net.Dial("tcp", address)
+	if err != nil {
+		return nil, err
+	}
+	return New(conn, options), nil
+}
+
 // DialTLS connects to an IMAP server with implicit TLS.
 func DialTLS(address string, options *Options) (*Client, error) {
 	tlsConfig := options.tlsConfig()
@@ -212,7 +225,7 @@ func DialTLS(address string, options *Options) (*Client, error) {
 		tlsConfig.NextProtos = []string{"imap"}
 	}
 
-	conn, err := tls.Dial("tcp", address, tlsConfig)
+	conn, err := tls.DialWithDialer(dialer, "tcp", address, tlsConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -230,7 +243,7 @@ func DialStartTLS(address string, options *Options) (*Client, error) {
 		return nil, err
 	}
 
-	conn, err := net.Dial("tcp", address)
+	conn, err := dialer.Dial("tcp", address)
 	if err != nil {
 		return nil, err
 	}
@@ -355,7 +368,7 @@ func (c *Client) Close() error {
 	c.mutex.Unlock()
 
 	// Ignore net.ErrClosed here, because we also call conn.Close in c.read
-	if err := c.conn.Close(); err != nil && !errors.Is(err, net.ErrClosed) {
+	if err := c.conn.Close(); err != nil && !errors.Is(err, net.ErrClosed) && !errors.Is(err, io.ErrClosedPipe) {
 		return err
 	}
 
@@ -561,7 +574,7 @@ func (c *Client) read() {
 	c.setReadTimeout(idleReadTimeout)
 	for {
 		// Ignore net.ErrClosed here, because we also call conn.Close in c.Close
-		if c.dec.EOF() || errors.Is(c.dec.Err(), net.ErrClosed) {
+		if c.dec.EOF() || errors.Is(c.dec.Err(), net.ErrClosed) || errors.Is(c.dec.Err(), io.ErrClosedPipe) {
 			break
 		}
 		if err := c.readResponse(); err != nil {
