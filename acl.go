@@ -1,7 +1,6 @@
 package imap
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -12,6 +11,7 @@ type RightSet string
 type Right byte
 
 const (
+	// Standard rights
 	RightLookup     = Right('l') // mailbox is visible to LIST/LSUB commands
 	RightRead       = Right('r') // SELECT the mailbox, perform CHECK, FETCH, PARTIAL, SEARCH, COPY from mailbox
 	RightSeen       = Right('s') // keep seen/unseen information across sessions (STORE SEEN flag)
@@ -22,7 +22,7 @@ const (
 	RightDelete     = Right('d') // STORE DELETED flag, perform EXPUNGE
 	RightAdminister = Right('a') // perform SETACL
 
-	AllRights = RightSet("lrswipcda")
+	AllStandardRights = RightSet("lrswipcda")
 )
 
 type RightsIdentifier string
@@ -38,11 +38,11 @@ const (
 )
 
 // NewRights converts rights string into RightModification and RightSet with validation
-func NewRights(rights string, ignoreUnsupported bool) (RightModification, RightSet, error) {
+func NewRights(rights string) (RightModification, RightSet) {
 	rm := RightModificationReplace
 
 	if len(rights) == 0 {
-		return rm, "", nil
+		return rm, ""
 	}
 
 	if rights[0] == byte(RightModificationAdd) || rights[0] == byte(RightModificationRemove) {
@@ -50,20 +50,7 @@ func NewRights(rights string, ignoreUnsupported bool) (RightModification, RightS
 		rights = rights[1:]
 	}
 
-	var newRights RightSet
-	for _, r := range rights {
-		if IsSupportedRight(r) {
-			newRights += RightSet(r)
-		} else if !ignoreUnsupported {
-			return rm, "", fmt.Errorf("unsupported right: '%v'", r)
-		}
-	}
-
-	return rm, RightSet(newRights), nil
-}
-
-func IsSupportedRight(r rune) bool {
-	return strings.ContainsRune(string(AllRights), r)
+	return rm, RightSet(rights)
 }
 
 func (r RightSet) Add(rights RightSet) RightSet {
@@ -88,12 +75,19 @@ func (r RightSet) Remove(rights RightSet) RightSet {
 	return newRights
 }
 
-func (r RightSet) Equal(rights RightSet) bool {
-	for _, right := range r {
-		if !strings.ContainsRune(string(rights), right) {
+func (rs1 RightSet) Equal(rs2 RightSet) bool {
+	for _, r := range rs1 {
+		if !strings.ContainsRune(string(rs2), r) {
 			return false
 		}
 	}
+
+	for _, r := range rs2 {
+		if !strings.ContainsRune(string(rs1), r) {
+			return false
+		}
+	}
+
 	return true
 }
 
