@@ -282,7 +282,7 @@ func (c *Client) setState(state imap.ConnState) {
 // and block until it's received. If the capabilities cannot be fetched, nil is
 // returned.
 func (c *Client) Caps() imap.CapSet {
-	if err := c.WaitGreeting(); err != nil {
+	if _, err := c.WaitGreeting(); err != nil {
 		return nil
 	}
 
