@@ -72,6 +72,9 @@ func (cmd *IdleCommand) run(c *Client, child *idleCommand) {
 			if child, cmd.err = c.idle(); cmd.err != nil {
 				return
 			}
+		case <-c.decCh:
+			cmd.lastChild = child
+			return
 		case <-cmd.stop:
 			cmd.lastChild = child
 			return
@@ -93,12 +96,7 @@ func (cmd *IdleCommand) Close() error {
 }
 
 // Wait blocks until the IDLE command has completed.
-//
-// Wait can only be called after Close.
 func (cmd *IdleCommand) Wait() error {
-	if !cmd.stopped.Load() {
-		return fmt.Errorf("imapclient: IdleCommand.Close must be called before Wait")
-	}
 	<-cmd.done
 	if cmd.err != nil {
 		return cmd.err

@@ -1,8 +1,6 @@
 package imapserver
 
 import (
-	"fmt"
-
 	"github.com/emersion/go-imap/v2"
 	"github.com/emersion/go-imap/v2/internal/imapwire"
 )
@@ -41,10 +39,7 @@ func (c *Conn) handleSetACL(dec *imapwire.Decoder) error {
 		return newClientBugError("SetACL is not supported")
 	}
 
-	rm, rs, err := imap.NewRights(rights, false)
-	if err != nil {
-		return fmt.Errorf("parsing rights error: %v", err)
-	}
+	rm, rs := imap.NewRights(rights)
 
 	return session.SetACL(mailbox, imap.RightsIdentifier(identifier), rm, rs)
 }

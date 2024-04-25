@@ -37,6 +37,10 @@ func newMemClientServerPair(t *testing.T) (net.Conn, io.Closer) {
 			return memServer.NewSession(), nil, nil
 		},
 		InsecureAuth: true,
+		Caps: imap.CapSet{
+			imap.CapIMAP4rev1: {},
+			imap.CapIMAP4rev2: {},
+		},
 	})
 
 	ln, err := net.Listen("tcp", "localhost:0")
@@ -137,21 +141,6 @@ func TestLogout(t *testing.T) {
 		t.Errorf("Logout().Wait() = %v", err)
 	}
 	if err := client.Close(); err != nil {
-		t.Errorf("Close() = %v", err)
-	}
-}
-
-func TestIdle(t *testing.T) {
-	client, server := newClientServerPair(t, imap.ConnStateSelected)
-	defer client.Close()
-	defer server.Close()
-
-	idleCmd, err := client.Idle()
-	if err != nil {
-		t.Fatalf("Idle() = %v", err)
-	}
-	// TODO: test unilateral updates
-	if err := idleCmd.Close(); err != nil {
 		t.Errorf("Close() = %v", err)
 	}
 }

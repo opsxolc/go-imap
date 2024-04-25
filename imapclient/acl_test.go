@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/emersion/go-imap/v2"
-	"github.com/stretchr/testify/assert"
 )
 
 // order matters
@@ -20,8 +19,8 @@ var testCases = []struct {
 		name:                  "inbox",
 		mailbox:               "INBOX",
 		setRightsModification: imap.RightModificationReplace,
-		setRights:             imap.AllRights,
-		expectedRights:        imap.AllRights,
+		setRights:             "akxeilprwtscd",
+		expectedRights:        "akxeilprwtscd",
 	},
 	{
 		name:                  "custom_folder",
@@ -34,15 +33,15 @@ var testCases = []struct {
 		name:                  "custom_child_folder",
 		mailbox:               "MyFolder.Child",
 		setRightsModification: imap.RightModificationReplace,
-		setRights:             "alwrd",
-		expectedRights:        "alwrd",
+		setRights:             "aelrwtd",
+		expectedRights:        "aelrwtd",
 	},
 	{
 		name:                  "add_rights",
 		mailbox:               "MyFolder",
 		setRightsModification: imap.RightModificationAdd,
-		setRights:             "rwic",
-		expectedRights:        "ailwrc",
+		setRights:             "rwi",
+		expectedRights:        "ailwr",
 	},
 	{
 		name:                  "remove_rights",
@@ -60,7 +59,7 @@ var testCases = []struct {
 	},
 }
 
-// TestACL runs tests on SetACL and MyRights commands (for now).
+// TestACL runs tests on SetACL, GetACL and MyRights commands.
 func TestACL(t *testing.T) {
 	client, server := newClientServerPair(t, imap.ConnStateAuthenticated)
 
@@ -79,32 +78,35 @@ func TestACL(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// execute SETACL command
 			err := client.SetACL(tc.mailbox, testUsername, tc.setRightsModification, tc.setRights).Wait()
-			assert.NoErrorf(t, err, "SetACL().Wait() error")
+			if err != nil {
+				t.Errorf("SetACL().Wait() error: %v", err)
+			}
 
 			// execute GETACL command to reset cache on server
 			getACLData, err := client.GetACL(tc.mailbox).Wait()
-			if assert.NoErrorf(t, err, "GetACL().Wait() error") {
-				assert.Equal(t, tc.mailbox, getACLData.Mailbox)
-				assert.Truef(t, tc.expectedRights.Equal(getACLData.Rights[testUsername]),
-					"expected: %s, got: %s", tc.expectedRights, getACLData.Rights[testUsername])
+			if err != nil {
+				t.Errorf("GetACL().Wait() error: %v", err)
+			}
+
+			if !tc.expectedRights.Equal(getACLData.Rights[testUsername]) {
+				t.Errorf("GETACL returned wrong rights; expected: %s, got: %s", tc.expectedRights, getACLData.Rights[testUsername])
 			}
 
 			// execute MYRIGHTS command
 			myRightsData, err := client.MyRights(tc.mailbox).Wait()
-			if assert.NoErrorf(t, err, "MyRights().Wait() error") {
-				assert.Equal(t, tc.mailbox, myRightsData.Mailbox)
-				assert.Truef(t, tc.expectedRights.Equal(myRightsData.Rights),
-					"expected: %s, got: %s", tc.expectedRights, myRightsData.Rights)
+			if err != nil {
+				t.Errorf("MyRights().Wait() error: %v", err)
+			}
+
+			if !tc.expectedRights.Equal(myRightsData.Rights) {
+				t.Errorf("MYRIGHTS returned wrong rights; expected: %s, got: %s", tc.expectedRights, myRightsData.Rights)
 			}
 		})
 	}
 
-	t.Run("set_invalid_rights", func(t *testing.T) {
-		assert.Error(t, client.SetACL("MyFolder", testUsername, imap.RightModificationReplace, "bibli").Wait())
-		assert.Error(t, client.SetACL("MyFolder", testUsername, imap.RightModificationReplace, "rw i").Wait())
-	})
-
 	t.Run("nonexistent_mailbox", func(t *testing.T) {
-		assert.Error(t, client.SetACL("BibiMailbox", testUsername, imap.RightModificationReplace, "").Wait())
+		if client.SetACL("BibiMailbox", testUsername, imap.RightModificationReplace, "").Wait() == nil {
+			t.Errorf("expected error")
+		}
 	})
 }

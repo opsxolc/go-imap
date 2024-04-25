@@ -32,8 +32,6 @@ plugin {
 
 	clientConn, serverConn := net.Pipe()
 
-	// this works for me, while doveadm for some reason don't
-	// cmd := exec.Command("/usr/libexec/dovecot/imap", "-c", cfgFilename)
 	cmd := exec.Command("doveadm", "-c", cfgFilename, "exec", "imap")
 	cmd.Env = []string{"USER=" + testUsername, "PATH=" + os.Getenv("PATH")}
 	cmd.Dir = tempDir

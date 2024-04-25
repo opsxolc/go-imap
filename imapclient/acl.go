@@ -45,10 +45,7 @@ func readMyRights(dec *imapwire.Decoder) (*imap.MyRightsData, error) {
 		return nil, dec.Err()
 	}
 
-	_, rs, err := imap.NewRights(rights, true)
-	if err != nil {
-		return nil, err
-	}
+	_, rs := imap.NewRights(rights)
 
 	data.Rights = rs
 
@@ -122,10 +119,7 @@ func readGetACL(dec *imapwire.Decoder) (*imap.GetACLData, error) {
 			return nil, dec.Err()
 		}
 
-		_, rs, err := imap.NewRights(rsStr, true)
-		if err != nil {
-			return nil, err
-		}
+		_, rs := imap.NewRights(rsStr)
 
 		data.Rights[imap.RightsIdentifier(riStr)] = rs
 	}
