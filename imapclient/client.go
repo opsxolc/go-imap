@@ -880,7 +880,6 @@ func (c *Client) readResponseData(typ string) error {
 		if !c.greetingRecv {
 			switch typ {
 			case "OK":
-				c.greetingCh <- text
 				c.setState(imap.ConnStateNotAuthenticated)
 			case "PREAUTH":
 				c.setState(imap.ConnStateAuthenticated)
@@ -896,6 +895,7 @@ func (c *Client) readResponseData(typ string) error {
 			if c.greetingErr == nil && code != "CAPABILITY" {
 				c.setCaps(nil) // request initial capabilities
 			}
+			c.greetingCh <- text
 			close(c.greetingCh)
 		}
 	case "CAPABILITY":

@@ -67,6 +67,7 @@ const (
 	MailboxAttrJunk      MailboxAttr = "\\Junk"
 	MailboxAttrSent      MailboxAttr = "\\Sent"
 	MailboxAttrTrash     MailboxAttr = "\\Trash"
+	MailboxAttrTemplates MailboxAttr = "\\Templates"
 	MailboxAttrImportant MailboxAttr = "\\Important" // RFC 8457
 )
 
