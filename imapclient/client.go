@@ -177,7 +177,7 @@ func New(conn net.Conn, options *Options) *Client {
 		br:         br,
 		bw:         bw,
 		dec:        imapwire.NewDecoder(br, imapwire.ConnSideClient),
-		greetingCh: make(chan string),
+		greetingCh: make(chan string, 1),
 		decCh:      make(chan struct{}),
 		state:      imap.ConnStateNone,
 		enabled:    make(imap.CapSet),
