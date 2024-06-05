@@ -204,6 +204,22 @@ func (sw *swapWriter) Swap(w io.Writer) {
 	sw.mutex.Unlock()
 }
 
+func TestWaitGreeting(t *testing.T) {
+	client, server := newClientServerPair(t, imap.ConnStateAuthenticated)
+	defer client.Close()
+	defer server.Close()
+
+	greetingText, err := client.WaitGreeting()
+	if err != nil {
+		t.Errorf("WaitGreeting() = %v", err)
+	}
+
+	// imapmemserver or dovecot PREAUTH greetings
+	if greetingText != "IMAP server ready" && greetingText != "Logged in as test-user" {
+		t.Errorf("Unexpected greeting text = %s", greetingText)
+	}
+}
+
 func TestLogin(t *testing.T) {
 	client, server := newClientServerPair(t, imap.ConnStateNotAuthenticated)
 	defer client.Close()
