@@ -138,7 +138,7 @@ type Client struct {
 	dec      *imapwire.Decoder
 	encMutex sync.Mutex
 
-	greetingCh   chan struct{}
+	greetingCh   chan string
 	greetingRecv bool
 	greetingErr  error
 
@@ -177,7 +177,7 @@ func New(conn net.Conn, options *Options) *Client {
 		br:         br,
 		bw:         bw,
 		dec:        imapwire.NewDecoder(br, imapwire.ConnSideClient),
-		greetingCh: make(chan struct{}),
+		greetingCh: make(chan string, 1),
 		decCh:      make(chan struct{}),
 		state:      imap.ConnStateNone,
 		enabled:    make(imap.CapSet),
@@ -295,7 +295,7 @@ func (c *Client) setState(state imap.ConnState) {
 // and block until it's received. If the capabilities cannot be fetched, nil is
 // returned.
 func (c *Client) Caps() imap.CapSet {
-	if err := c.WaitGreeting(); err != nil {
+	if _, err := c.WaitGreeting(); err != nil {
 		return nil
 	}
 
@@ -905,6 +905,7 @@ func (c *Client) readResponseData(typ string) error {
 			if c.greetingErr == nil && code != "CAPABILITY" {
 				c.setCaps(nil) // request initial capabilities
 			}
+			c.greetingCh <- text
 			close(c.greetingCh)
 		}
 	case "CAPABILITY":
@@ -982,16 +983,16 @@ func (c *Client) readResponseData(typ string) error {
 	return nil
 }
 
-// WaitGreeting waits for the server's initial greeting.
-func (c *Client) WaitGreeting() error {
+// WaitGreeting waits for the server's initial greeting and its text.
+func (c *Client) WaitGreeting() (string, error) {
 	select {
-	case <-c.greetingCh:
-		return c.greetingErr
+	case greetingText := <-c.greetingCh:
+		return greetingText, c.greetingErr
 	case <-c.decCh:
 		if c.decErr != nil {
-			return fmt.Errorf("got error before greeting: %v", c.decErr)
+			return "", fmt.Errorf("got error before greeting: %v", c.decErr)
 		}
-		return fmt.Errorf("connection closed before greeting")
+		return "", fmt.Errorf("connection closed before greeting")
 	}
 }
 

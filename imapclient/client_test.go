@@ -271,7 +271,7 @@ func TestWaitGreeting_eof(t *testing.T) {
 		t.Fatalf("serverConn.Close() = %v", err)
 	}
 
-	if err := client.WaitGreeting(); err == nil {
+	if _, err := client.WaitGreeting(); err == nil {
 		t.Fatalf("WaitGreeting() should fail")
 	}
 }
