@@ -136,6 +136,7 @@ func canonInit() {
 		imap.MailboxAttrSent,
 		imap.MailboxAttrTrash,
 		imap.MailboxAttrImportant,
+		imap.MailboxAttrTemplates,
 	}
 
 	canonFlag = make(map[string]imap.Flag)

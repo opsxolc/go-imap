@@ -68,6 +68,7 @@ const (
 	MailboxAttrSent      MailboxAttr = "\\Sent"
 	MailboxAttrTrash     MailboxAttr = "\\Trash"
 	MailboxAttrImportant MailboxAttr = "\\Important" // RFC 8457
+	MailboxAttrTemplates MailboxAttr = "\\Templates"
 )
 
 // Flag is a message flag.
