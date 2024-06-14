@@ -61,7 +61,7 @@ const (
 
 	// Role (aka. "special-use") attributes
 	MailboxAttrAll       MailboxAttr = "\\All"
-	MailboxAttrAllMail       MailboxAttr = "\\Allmail"
+	MailboxAttrAllMail   MailboxAttr = "\\Allmail"
 	MailboxAttrArchive   MailboxAttr = "\\Archive"
 	MailboxAttrDrafts    MailboxAttr = "\\Drafts"
 	MailboxAttrFlagged   MailboxAttr = "\\Flagged"
